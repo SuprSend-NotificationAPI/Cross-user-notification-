@@ -2,7 +2,7 @@ import { React, useState, useEffect, useCallback } from "react";
 // import data from "./data";
 import axios from "axios";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
-import { EffectFlip } from "swiper";
+import { EffectCards } from "swiper";
 import icon from "../images/heart.svg";
 import iconfill from "../images/heart-fill.svg";
 import image from "../images/user.svg";
@@ -10,14 +10,13 @@ import SuprSendInbox from "@suprsend/react-inbox";
 import { Swiper, SwiperSlide } from "swiper/react";
 //swiper stylesheets
 import "swiper/css";
-import "swiper/css/effect-flip";
+import "swiper/css/effect-cards";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import AddPost from "./addpost";
 
 function Home({ username, email, phone }) {
   const [postnum, setPostNum] = useState();
-  // const [isIcon, setIsIcon] = useState([true, true, true]);
   const [subid, setsubid] = useState();
   const [showAddPostModal, setShowAddPostModal] = useState(false);
 
@@ -51,25 +50,6 @@ function Home({ username, email, phone }) {
     };
     setsubid(getSub());
   }, [email]);
-
-  // const sendNotif = useCallback(async () => {
-  //   try {
-  //     const response = await axios.post("https://multiii.onrender.com/like", {
-  //       username: username,
-  //       email: email,
-  //       phone: phone,
-  //       postnum: postnum,
-  //     });
-  //     console.log(response.data);
-  //   } catch (error) {
-  //     console.error("An error occurred while sending notification:", error);
-  //   }
-  // }, [username, email, phone, postnum]); // include all variables that the function depends on
-
-  // useEffect(() => {
-  //   console.log(postnum);
-  //   if (postnum !== undefined) sendNotif();
-  // }, [postnum, sendNotif]);
 
   return (
     <>
@@ -136,8 +116,8 @@ function Home({ username, email, phone }) {
         >
           <div style={{ width: "20%" }}>
             <Swiper
-              modules={[Navigation, Pagination, Scrollbar, A11y, EffectFlip]}
-              effect={"flip"}
+              modules={[Navigation, Pagination, Scrollbar, A11y, EffectCards]}
+              effect={"cards"}
               //   navigation={true}
               pagination={{ clickable: true }}
             >
@@ -189,7 +169,6 @@ function Home({ username, email, phone }) {
                     }}
                   >
                     <img
-                      // src={`images/${item.filename}`}
                       src={`https://multiii.onrender.com/images/${item.image}`}
                       alt="image1"
                       style={{
@@ -216,21 +195,13 @@ function Home({ username, email, phone }) {
                         height: "20px",
                         width: "20px",
                       }}
-                      // onClick={async () => {
-                      //   const newIsIcon = [...isIcon];
-                      //   newIsIcon[index] = !newIsIcon[index];
-                      //   if (isIcon[index]) {
-                      //     setPostNum(index);
-                      //     // sendNotif();
-                      //   }
-                      //   setIsIcon(newIsIcon);
-                      // }}
+                     
                       onClick={async () => {
                         const newPosts = [...posts];
                         newPosts[index].isLiked = !newPosts[index].isLiked;
 
                         if (newPosts[index].isLiked) {
-                          setPostNum(index);
+                          // setPostNum(index);
                           try {
                             await axios.post(
                               `https://multiii.onrender.com/posts/${posts[index]._id}/like`,
