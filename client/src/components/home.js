@@ -1,8 +1,9 @@
-import { React, useState, useEffect, useCallback } from "react";
+import { React, useState, useEffect } from "react";
 // import data from "./data";
+import "bootstrap/dist/css/bootstrap.css";
 import axios from "axios";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper";
-import { EffectCards } from "swiper";
+import { EffectFlip } from "swiper";
 import icon from "../images/heart.svg";
 import iconfill from "../images/heart-fill.svg";
 import image from "../images/user.svg";
@@ -10,18 +11,34 @@ import SuprSendInbox from "@suprsend/react-inbox";
 import { Swiper, SwiperSlide } from "swiper/react";
 //swiper stylesheets
 import "swiper/css";
-import "swiper/css/effect-cards";
+import "swiper/css/effect-flip";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import AddPost from "./addpost";
 
 function Home({ username, email, phone }) {
-  const [postnum, setPostNum] = useState();
   const [subid, setsubid] = useState();
   const [showAddPostModal, setShowAddPostModal] = useState(false);
+  const [ischecked, setischecked] = useState(true);
 
   const [posts, setPosts] = useState([]);
 
+  const setUserPref = async () => {
+    try {
+      const newischecked = !ischecked;
+      setischecked(!ischecked);
+      const response = await axios.post(
+        "https://multiii.onrender.com/userpref",
+        {
+          ischecked: newischecked,
+        }
+      );
+      console.log(response.data);
+      console.log("for frontend,notifs are: ", newischecked);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const fetchPosts = async () => {
     try {
       const response = await axios.get("https://multiii.onrender.com/posts");
@@ -30,7 +47,6 @@ function Home({ username, email, phone }) {
         isLiked: false,
       }));
       setPosts(updatedPosts);
-      // console.log(response.data);
     } catch (error) {
       console.error("An error occurred while fetching posts:", error);
     }
@@ -46,9 +62,17 @@ function Home({ username, email, phone }) {
           email: email,
         },
       });
+      console.log(response);
       return response;
     };
-    setsubid(getSub());
+
+    getSub()
+      .then((data) => {
+        if (ischecked === true) setsubid(data.data);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
   }, [email]);
 
   return (
@@ -60,7 +84,7 @@ function Home({ username, email, phone }) {
           fetchPosts={fetchPosts}
         />
       )}
-      <div style={{ width: "98.9vw", height: "100vh" }}>
+      <div style={{ width: "100vw", height: "100vh" }}>
         <div
           style={{
             display: "flex",
@@ -74,6 +98,30 @@ function Home({ username, email, phone }) {
             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.2)",
           }}
         >
+          <div
+            style={{
+              position: "fixed",
+              left: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+              <div style={{fontWeight:'bold', fontSize:'18px'}}> Enable Notifications? &nbsp;</div>
+            <div className="form-check form-switch" style={{height:'25px', width:'65px'}}>
+              <input
+                className="form-check-input"
+                type="checkbox"
+             style={{width:'40px',height:'19px'}}
+                role="switch"
+                id="flexSwitchCheckChecked"
+                checked={ischecked}
+                onClick={() => {
+                  setUserPref();
+                }}
+              />
+            </div>
+          </div>
           <h2 style={{ fontSize: "35px" }}>Insta-Kilo-Gram</h2>
           <div
             style={{
@@ -85,7 +133,7 @@ function Home({ username, email, phone }) {
           >
             <div>
               <button
-                className="button"
+                className="button1"
                 onClick={() => setShowAddPostModal(true)}
                 style={{ marginRight: "15px" }}
               >
@@ -102,6 +150,7 @@ function Home({ username, email, phone }) {
               subscriberId={subid}
               distinctId={email}
             />
+            {console.log(`${subid}+${email}`)}
           </div>
         </div>
         <div
@@ -116,8 +165,8 @@ function Home({ username, email, phone }) {
         >
           <div style={{ width: "20%" }}>
             <Swiper
-              modules={[Navigation, Pagination, Scrollbar, A11y, EffectCards]}
-              effect={"cards"}
+              modules={[Navigation, Pagination, Scrollbar, A11y, EffectFlip]}
+              effect={"flip"}
               //   navigation={true}
               pagination={{ clickable: true }}
             >
@@ -135,7 +184,7 @@ function Home({ username, email, phone }) {
                   }}
                 >
                   <div
-                    className="head"
+                    className="head1"
                     style={{
                       display: "flex",
                       margin: "10px",
@@ -160,7 +209,7 @@ function Home({ username, email, phone }) {
                     {item.contributor}
                   </div>
                   <div
-                    className="image"
+                    className="image1"
                     style={{
                       width: "100%",
                       height: "45%",
@@ -195,13 +244,11 @@ function Home({ username, email, phone }) {
                         height: "20px",
                         width: "20px",
                       }}
-                     
                       onClick={async () => {
                         const newPosts = [...posts];
                         newPosts[index].isLiked = !newPosts[index].isLiked;
 
                         if (newPosts[index].isLiked) {
-                          // setPostNum(index);
                           try {
                             await axios.post(
                               `https://multiii.onrender.com/posts/${posts[index]._id}/like`,
@@ -221,7 +268,7 @@ function Home({ username, email, phone }) {
                     />
                   </div>
                   <div
-                    className="body"
+                    className="body1"
                     style={{
                       width: "95%",
                       height: "33%",

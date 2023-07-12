@@ -93,7 +93,7 @@ function Main({ username, setUsername, email, setEmail, phone, setPhone }) {
           />
 
           <div className="button-container">
-            <button type="submit" className="btn">
+            <button type="submit" className="btn1">
               Enter
             </button>
           </div>

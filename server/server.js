@@ -14,6 +14,8 @@ const { Suprsend } = require("@suprsend/node-sdk");
 const { Event } = require("@suprsend/node-sdk");
 dotenv.config();
 
+let notifAllowed = true;
+
 const supr_client = new Suprsend(
   process.env.WORKSPACE_KEY,
   process.env.WORKSPACE_SECRET
@@ -24,7 +26,11 @@ function hmac_rawurlsafe_base64_string(distinct_id, secret) {
     .createHmac("sha256", secret)
     .update(distinct_id)
     .digest("base64url");
-  return hash.trimEnd("=");
+
+  const buff = Buffer.from(hash, "utf-8").toString("base64");
+
+  console.log("The buffer is : " + buff);
+  return buff;
 }
 
 const corsOptions = {
@@ -48,10 +54,9 @@ app.use(express.json());
 
 const masterUser = {
   username: "Admin",
-  email: "200104019@hbtu.ac.in",
-  phone: "+919651295599",
+  email: "nikhil.kumar@suprsend.com",
+  phone: "+919031016836",
 };
-
 
 app.get("/subid", (req, res) => {
   const { email } = req.query;
@@ -84,25 +89,35 @@ app.post("/enter", async (req, res) => {
   }
 });
 
+app.post("/userpref", (req, res) => {
+  const { ischecked } = req.body;
+
+  if (ischecked == false) {
+    notifAllowed = false;
+  } else {
+    notifAllowed = true;
+  }
+  res.status(200).json({ message: `notifs allowed: ${notifAllowed}` });
+});
+
 app.post("/posts/:postId/like", async (req, res) => {
   const userId = req.body.userId;
   const postId = req.params.postId;
 
   const post = await Post.findById(postId);
-  // const user1 = await User.findOne(userId);
   const user1 = await User.findOne({ email: userId });
   const index = post.likes.indexOf(userId);
-  
+
   if (index > -1) {
     post.likes.splice(index, 1);
     await post.save();
     return res.status(200).json({ message: "Post unliked." });
   }
-    post.likes.push(userId);
-    await post.save();
-    
-    // const creator = await User.findById(post.userId);
-    const creator = await User.findOne({ email: post.userId });
+  post.likes.push(userId);
+  await post.save();
+
+
+  const creator = await User.findOne({ email: post.userId });
   const creatorEmail = creator.email;
   const creatorPhone = creator.phone;
 
@@ -135,7 +150,7 @@ app.post("/posts/:postId/like", async (req, res) => {
         properties.rec_name = creator.username;
         properties.interactant_name = user1.username;
         properties.verb = "your";
-      } else {
+      } else if (user === senduser && notifAllowed == true) {
         user.add_email(user1.email);
         user.add_sms(`+${user1.phone}`);
         distinct_id = user1.email;
@@ -157,7 +172,6 @@ app.post("/posts/:postId/like", async (req, res) => {
     res.status(500).send({ message: "Error sending notification" });
   }
 
-  // return res.status(200).json({ message: "Post liked." });
 });
 
 app.get("/posts", (req, res) => {
@@ -182,19 +196,20 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 app.post("/posts", upload.single("uploaded_file"), (req, res) => {
-  // console.log(req.body, req.file);
-  const { contributor, body,userId } = req.body;
+  const { contributor, body, userId } = req.body;
   const image = req.file.filename;
 
   if (!contributor || !body || !image) {
-    return res.status(400).json({ error: "Missing contributor, body or image" });
+    return res
+      .status(400)
+      .json({ error: "Missing contributor, body or image" });
   }
 
   const newPost = new Post({
     contributor,
     image,
     body,
-    userId
+    userId,
   });
 
   newPost
